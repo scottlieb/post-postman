@@ -1,31 +1,24 @@
 /*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
+Copyright © 2023 Amitai Gottlieb
 */
 package cmd
 
 import (
-	"fmt"
 	"os"
+	"path"
+	"post-postman/cmd/create"
+	"post-postman/cmd/edit"
+	"post-postman/cmd/remove"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
-
 // Cmd represents the base command when called without any subcommands
 var Cmd = &cobra.Command{
-	Use:   "post-postman",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Use:   "ppm",
+	Short: "A CLI REST client with support for collections.",
+	Long:  "Welcome to post-postman! A CLI REST client with support for collections!",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -38,40 +31,48 @@ func Execute() {
 }
 
 func init() {
+	Cmd.AddCommand(create.Cmd)
+	Cmd.AddCommand(remove.Cmd)
+	Cmd.AddCommand(edit.Cmd)
+
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	Cmd.PersistentFlags().String("config", "", "config file (default is $HOME/.post-postman/config)")
+	viper.SetDefault("cfgFile", "")
+	err := viper.BindPFlag("cfgFile", Cmd.PersistentFlags().Lookup("config"))
+	cobra.CheckErr(err)
 
-	Cmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.post-postman.yaml)")
-	Cmd.PersistentFlags()
+	Cmd.PersistentFlags().StringP("collection", "c", "", "collection to use (default is 'global')")
+	viper.SetDefault("collection", "global")
+	err = viper.BindPFlag("collection", Cmd.PersistentFlags().Lookup("collection"))
+	cobra.CheckErr(err)
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	Cmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// TODO: Make this better.
+	cobra.OnFinalize(func() { _ = viper.SafeWriteConfig() })
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" {
+	// Find home directory.
+	home, err := os.UserHomeDir()
+	cobra.CheckErr(err)
+
+	defaultRoot := path.Join(home, ".post-postman")
+	viper.SetDefault("root", defaultRoot)
+
+	if cfgFile := viper.GetString("cfgFile"); cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Find home directory.
-		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
-
 		// Search config in home directory with name ".post-postman" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigType("yaml")
-		viper.SetConfigName(".post-postman")
+		viper.AddConfigPath(defaultRoot)
+		viper.SetConfigType("json")
+		viper.SetConfigName("config")
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
+	// Read in environment variables that match.
+	viper.AutomaticEnv()
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		_, _ = fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
-	}
+	_ = viper.ReadInConfig()
 }
