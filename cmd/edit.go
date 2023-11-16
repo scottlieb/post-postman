@@ -6,18 +6,18 @@ import (
 	"strings"
 )
 
-// execCmd represents the exec command
-var execCmd = &cobra.Command{
-	Use:   "exec <request-name>",
-	Short: "Execute a request.",
-	Long:  "Execute a request.",
+// editCmd represents the edit command
+var editCmd = &cobra.Command{
+	Use:   "edit <entity> <name>",
+	Short: "TODO",
+	Long:  "TODO",
 }
 
 func init() {
-	execCmd.Run = exec
+	editCmd.Run = edit
 }
 
-func exec(_ *cobra.Command, args []string) {
+func edit(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
 		err := cmd.Help()
 		cobra.CheckErr(err)
@@ -35,9 +35,6 @@ func exec(_ *cobra.Command, args []string) {
 	err := config.InitRequestConfig(parts...)
 	cobra.CheckErr(err)
 
-	req, err := config.Request()
-	cobra.CheckErr(err)
-
-	err = req.Execute()
+	err = config.Persist()
 	cobra.CheckErr(err)
 }

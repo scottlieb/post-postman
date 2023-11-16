@@ -6,18 +6,19 @@ import (
 	"strings"
 )
 
-// execCmd represents the exec command
-var execCmd = &cobra.Command{
-	Use:   "exec <request-name>",
-	Short: "Execute a request.",
-	Long:  "Execute a request.",
+// removeCmd represents the remove command
+var removeCmd = &cobra.Command{
+	Use:     "remove <entity> <name>",
+	Aliases: []string{"rm"},
+	Short:   "TODO",
+	Long:    "TODO",
 }
 
 func init() {
-	execCmd.Run = exec
+	removeCmd.Run = remove
 }
 
-func exec(_ *cobra.Command, args []string) {
+func remove(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
 		err := cmd.Help()
 		cobra.CheckErr(err)
@@ -35,9 +36,6 @@ func exec(_ *cobra.Command, args []string) {
 	err := config.InitRequestConfig(parts...)
 	cobra.CheckErr(err)
 
-	req, err := config.Request()
-	cobra.CheckErr(err)
-
-	err = req.Execute()
+	err = config.Remove()
 	cobra.CheckErr(err)
 }
