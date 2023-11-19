@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"post-postman/internal/config"
+	execute "os/exec"
 	"strings"
 )
 
@@ -19,8 +19,15 @@ func init() {
 
 func exec(_ *cobra.Command, args []string) {
 	if len(args) == 0 {
-		err := cmd.Help()
-		cobra.CheckErr(err)
+		err := cfg.NavigateAndReadIn()
+		checkErr(err)
+
+		curlCmd := execute.Command("curl", cfg.Cmd()...)
+		println(curlCmd.String())
+		out, err := curlCmd.CombinedOutput()
+		println(string(out))
+		checkErr(err)
+
 		return
 	}
 
@@ -31,13 +38,12 @@ func exec(_ *cobra.Command, args []string) {
 	}
 
 	parts := strings.Split(partsArg, ".")
+	err := cfg.NavigateAndReadIn(parts...)
+	checkErr(err)
 
-	err := config.InitRequestConfig(parts...)
-	cobra.CheckErr(err)
-
-	req, err := config.Request()
-	cobra.CheckErr(err)
-
-	err = req.Execute()
-	cobra.CheckErr(err)
+	curlCmd := execute.Command("curl", cfg.Cmd()...)
+	println(curlCmd.String())
+	out, err := curlCmd.CombinedOutput()
+	println(string(out))
+	checkErr(err)
 }

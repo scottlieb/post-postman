@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"post-postman/internal/config"
 	"strings"
 )
 
@@ -17,10 +16,12 @@ func init() {
 	editCmd.Run = edit
 }
 
-func edit(cmd *cobra.Command, args []string) {
+func edit(_ *cobra.Command, args []string) {
 	if len(args) == 0 {
-		err := cmd.Help()
-		cobra.CheckErr(err)
+		err := cfg.ReadIn()
+		checkErr(err)
+		err = cfg.WriteOut()
+		checkErr(err)
 		return
 	}
 
@@ -31,10 +32,12 @@ func edit(cmd *cobra.Command, args []string) {
 	}
 
 	parts := strings.Split(partsArg, ".")
+	err := cfg.Navigate(parts...)
+	checkErr(err)
 
-	err := config.InitRequestConfig(parts...)
-	cobra.CheckErr(err)
+	err = cfg.ReadIn()
+	checkErr(err)
 
-	err = config.Persist()
-	cobra.CheckErr(err)
+	err = cfg.WriteOut()
+	checkErr(err)
 }

@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"post-postman/internal/config"
 	"strings"
 )
 
@@ -18,9 +17,10 @@ func init() {
 }
 
 func create(cmd *cobra.Command, args []string) {
+	// TODO: read in flag values before write
 	if len(args) == 0 {
-		err := cmd.Help()
-		cobra.CheckErr(err)
+		err := cfg.WriteOut()
+		checkErr(err)
 		return
 	}
 
@@ -32,9 +32,15 @@ func create(cmd *cobra.Command, args []string) {
 
 	parts := strings.Split(partsArg, ".")
 
-	err := config.CreateRequestConfig(parts...)
-	cobra.CheckErr(err)
+	// All but the last part
+	for i := 0; i < len(parts)-1; i++ {
+		err := cfg.Navigate(parts...)
+		checkErr(err)
+	}
 
-	err = config.Persist()
-	cobra.CheckErr(err)
+	err := cfg.Create(parts[len(parts)-1])
+	checkErr(err)
+
+	err = cfg.WriteOut()
+	checkErr(err)
 }

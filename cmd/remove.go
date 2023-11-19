@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"post-postman/internal/config"
 	"strings"
 )
 
@@ -16,7 +15,11 @@ var removeCmd = &cobra.Command{
 
 func init() {
 	removeCmd.Run = remove
+
+	removeCmd.Flags().BoolVarP(&force, "force", "f", false, "force remove")
 }
+
+var force bool
 
 func remove(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
@@ -30,12 +33,4 @@ func remove(cmd *cobra.Command, args []string) {
 		println("invalid request name")
 		return
 	}
-
-	parts := strings.Split(partsArg, ".")
-
-	err := config.InitRequestConfig(parts...)
-	cobra.CheckErr(err)
-
-	err = config.Remove()
-	cobra.CheckErr(err)
 }
