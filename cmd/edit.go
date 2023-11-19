@@ -32,7 +32,7 @@ func edit(_ *cobra.Command, args []string) {
 	}
 
 	parts := strings.Split(partsArg, ".")
-	err := cfg.Navigate(parts...)
+	err := cfg.NavigateDir(parts...)
 	checkErr(err)
 
 	err = cfg.ReadIn()

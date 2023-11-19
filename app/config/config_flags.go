@@ -1,28 +1,12 @@
 package config
 
 import (
-	"fmt"
 	"github.com/spf13/pflag"
 	"reflect"
 	"strings"
 )
 
-type RequestFlags struct {
-	URL    string `short:"u" desc:"Request URL"`
-	Scheme string `short:"s" desc:"HTTP scheme to use"`
-	Host   string `short:"y" desc:"Request host"`
-	Path   string `short:"p" desc:"Request path"`
-}
-
-type CurlFlags struct {
-	Data    string   `short:"d" desc:"HTTP POST data"`
-	Request string   `short:"X" desc:"Specify request method to use" default:"GET"`
-	Verbose bool     `short:"v" desc:"Make the operation more talkative"`
-	Header  []string `short:"H" desc:"Pass custom header(s) to server"`
-}
-
-type configMap map[string]interface{}
-
+// header implements the pflag.Value interface
 type header struct {
 	val *[]string
 }
@@ -40,8 +24,10 @@ func (h header) Type() string {
 	return "key:value"
 }
 
-func InitFlags(cfgStruct interface{}, flags *pflag.FlagSet) error {
-	v := reflect.ValueOf(cfgStruct).Elem()
+// InitFlags takes a generic struct and a FlagSet and inits the application
+// flags bused on the struct tags.
+func InitFlags(flagStruct interface{}, flags *pflag.FlagSet) error {
+	v := reflect.ValueOf(flagStruct).Elem()
 
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Type().Field(i)
@@ -65,8 +51,8 @@ func InitFlags(cfgStruct interface{}, flags *pflag.FlagSet) error {
 	return nil
 }
 
-func flagsToConfig(cfgStruct interface{}, changed func(string) bool) configMap {
-	res := configMap{}
+func FromFlags(cfgStruct interface{}, changed func(string) bool) Map {
+	res := Map{}
 	v := reflect.ValueOf(cfgStruct)
 
 	for i := 0; i < v.NumField(); i++ {
@@ -83,8 +69,8 @@ func flagsToConfig(cfgStruct interface{}, changed func(string) bool) configMap {
 	return res
 }
 
-func readConfig(in []byte) configMap {
-	res := configMap{}
+func Read(in []byte) Map {
+	res := Map{}
 	fields := strings.Fields(string(in))
 	for _, field := range fields {
 		parts := strings.Split(field, "=")
@@ -105,38 +91,6 @@ func readConfig(in []byte) configMap {
 		}
 		if len(parts) > 2 {
 			println("Warning: bad config field:", field)
-		}
-	}
-	return res
-}
-
-func (c configMap) Merge(other configMap) {
-	for k, v := range other {
-		if k == "header" {
-			hdrs, ok := c[k]
-			if ok {
-				c[k] = append(hdrs.([]string), v.([]string)...)
-				continue
-			}
-			c[k] = v.([]string)
-		}
-
-		c[k] = v
-	}
-}
-
-func (c configMap) String() string {
-	res := ""
-	for k, v := range c {
-		switch vv := v.(type) {
-		case string:
-			res += fmt.Sprintf("%s=%s\n", k, vv)
-		case bool:
-			res += fmt.Sprintf("%s\n", k)
-		case []string:
-			for _, s := range vv {
-				res += fmt.Sprintf("%s=%s\n", k, s)
-			}
 		}
 	}
 	return res

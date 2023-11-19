@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"path"
-	"post-postman/app/config"
+	"post-postman/app"
 )
 
 // cmd represents the base command when called without any subcommands
@@ -20,7 +20,7 @@ func Execute() {
 	cobra.CheckErr(cmd.Execute())
 }
 
-var cfg config.ApplicationConfig
+var cfg app.Runtime
 
 func init() {
 	cmd.AddCommand(execCmd)
@@ -31,7 +31,7 @@ func init() {
 	home, err := os.UserHomeDir()
 	cobra.CheckErr(err)
 
-	appCfg, err := config.NewApplicationConfig(path.Join(home, ".post-postman"), cmd.PersistentFlags())
+	appCfg, err := app.NewRuntime(path.Join(home, ".post-postman"), cmd.PersistentFlags())
 	cobra.CheckErr(err)
 	cfg = *appCfg
 }

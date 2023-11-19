@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"os"
-	"post-postman/app/config"
+	"post-postman/app"
 )
 
 func checkErr(err error) {
@@ -12,7 +12,7 @@ func checkErr(err error) {
 		return
 	}
 
-	if errors.Is(err, config.FatalErr{}) {
+	if errors.Is(err, app.FatalErr{}) {
 		_, _ = fmt.Fprintf(os.Stderr, "FATAL: %v", err)
 		os.Exit(1)
 	}

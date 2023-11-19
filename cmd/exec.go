@@ -19,7 +19,7 @@ func init() {
 
 func exec(_ *cobra.Command, args []string) {
 	if len(args) == 0 {
-		err := cfg.NavigateAndReadIn()
+		err := cfg.NavigateDirAndReadIn()
 		checkErr(err)
 
 		curlCmd := execute.Command("curl", cfg.Cmd()...)
@@ -38,7 +38,7 @@ func exec(_ *cobra.Command, args []string) {
 	}
 
 	parts := strings.Split(partsArg, ".")
-	err := cfg.NavigateAndReadIn(parts...)
+	err := cfg.NavigateDirAndReadIn(parts...)
 	checkErr(err)
 
 	curlCmd := execute.Command("curl", cfg.Cmd()...)
