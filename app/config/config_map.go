@@ -1,8 +1,38 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Map map[string]interface{}
+
+func Read(in []byte) Map {
+	res := Map{}
+	fields := strings.Fields(string(in))
+	for _, field := range fields {
+		parts := strings.Split(field, "=")
+		if len(parts) == 1 {
+			res[field] = true
+		}
+		if len(parts) == 2 && parts[0] == "header" {
+			hdrs, ok := res["header"]
+			if ok {
+				res["header"] = append(hdrs.([]string), parts[1])
+				continue
+			}
+			res["header"] = []string{parts[1]}
+			continue
+		}
+		if len(parts) == 2 {
+			res[parts[0]] = parts[1]
+		}
+		if len(parts) > 2 {
+			println("Warning: bad config field:", field)
+		}
+	}
+	return res
+}
 
 func (c Map) GetString(key string) (string, bool) {
 	res, ok := c[key]
@@ -22,8 +52,8 @@ func (c Map) Merge(other Map) {
 				continue
 			}
 			c[k] = v.([]string)
+			continue
 		}
-
 		c[k] = v
 	}
 }

@@ -6,27 +6,61 @@ import (
 	"strings"
 )
 
-// header implements the pflag.Value interface
-type header struct {
-	val *[]string
+type requestFlags struct {
+	URL    string `short:"u" desc:"Request URL"`
+	Scheme string `short:"s" desc:"HTTP scheme to use"`
+	Host   string `short:"y" desc:"Request host"`
+	Path   string `short:"p" desc:"Request path"`
 }
 
-func (h header) String() string {
-	return ""
+type curlFlags struct {
+	Data    string   `short:"d" desc:"HTTP POST data"`
+	Request string   `short:"X" desc:"Specify request method to use" default:"GET"`
+	Verbose bool     `short:"v" desc:"Make the operation more talkative"`
+	Header  []string `short:"H" desc:"Pass custom header(s) to server"`
 }
 
-func (h header) Set(s string) error {
-	*(h.val) = append(*(h.val), s)
-	return nil
+type Flags struct {
+	changed func(string) bool
+	curlFlags
+	requestFlags
 }
 
-func (h header) Type() string {
-	return "key:value"
+func InitFlags(flags *pflag.FlagSet) (*Flags, error) {
+	res := Flags{
+		changed: func(s string) bool {
+			return flags.Changed(s)
+		},
+	}
+
+	err := initFlags(&res.curlFlags, flags)
+	if err != nil {
+		return nil, err
+	}
+
+	err = initFlags(&res.requestFlags, flags)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
 }
 
-// InitFlags takes a generic struct and a FlagSet and inits the application
+func (f *Flags) CurlConfig() Map {
+	res := Map{}
+	res.Merge(fromFlags(f.curlFlags, f.changed))
+	return res
+}
+
+func (f *Flags) RequestConfig() Map {
+	res := Map{}
+	res.Merge(fromFlags(f.requestFlags, f.changed))
+	return res
+}
+
+// initFlags takes a generic struct and a FlagSet and inits the application
 // flags bused on the struct tags.
-func InitFlags(flagStruct interface{}, flags *pflag.FlagSet) error {
+func initFlags(flagStruct interface{}, flags *pflag.FlagSet) error {
 	v := reflect.ValueOf(flagStruct).Elem()
 
 	for i := 0; i < v.NumField(); i++ {
@@ -51,7 +85,7 @@ func InitFlags(flagStruct interface{}, flags *pflag.FlagSet) error {
 	return nil
 }
 
-func FromFlags(cfgStruct interface{}, changed func(string) bool) Map {
+func fromFlags(cfgStruct interface{}, changed func(string) bool) Map {
 	res := Map{}
 	v := reflect.ValueOf(cfgStruct)
 
@@ -69,29 +103,20 @@ func FromFlags(cfgStruct interface{}, changed func(string) bool) Map {
 	return res
 }
 
-func Read(in []byte) Map {
-	res := Map{}
-	fields := strings.Fields(string(in))
-	for _, field := range fields {
-		parts := strings.Split(field, "=")
-		if len(parts) == 1 {
-			res[field] = true
-		}
-		if len(parts) == 2 && parts[0] == "header" {
-			hdrs, ok := res["header"]
-			if ok {
-				res["header"] = append(hdrs.([]string), parts[1])
-				continue
-			}
-			res["header"] = []string{parts[1]}
-			continue
-		}
-		if len(parts) == 2 {
-			res[parts[0]] = parts[1]
-		}
-		if len(parts) > 2 {
-			println("Warning: bad config field:", field)
-		}
-	}
-	return res
+// header implements the pflag.Value interface
+type header struct {
+	val *[]string
+}
+
+func (h header) String() string {
+	return ""
+}
+
+func (h header) Set(s string) error {
+	*(h.val) = append(*(h.val), s)
+	return nil
+}
+
+func (h header) Type() string {
+	return "key:value"
 }
