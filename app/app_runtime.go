@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"io"
 	"net/url"
@@ -90,6 +91,12 @@ func (r *Runtime) CreateDir(name string) error {
 	r.pwd = path.Join(r.pwd, name)
 	err := os.Mkdir(r.pwd, os.ModePerm)
 	if err != nil {
+		if errors.Is(err, os.ErrExist) {
+			return CollectionErr{
+				msg:        "collection already exists",
+				collection: name,
+			}
+		}
 		return FatalErr{err}
 	}
 	return nil
@@ -207,6 +214,34 @@ func (r *Runtime) Cmd() []string {
 	return append(flags, reqUrl.String())
 }
 
+func (r *Runtime) ForceRemove() error {
+	err := os.RemoveAll(r.pwd)
+	if err != nil {
+		return FatalErr{err}
+	}
+	return nil
+}
+
+func (r *Runtime) Remove() error {
+	children, err := r.getChildren()
+	if err != nil {
+		return err
+	}
+
+	if len(children) != 0 {
+		return CollectionErr{
+			msg:        "cannot remove collection with children",
+			collection: strings.Join(children, ","),
+		}
+	}
+
+	err = os.RemoveAll(r.pwd)
+	if err != nil {
+		return FatalErr{err}
+	}
+	return nil
+}
+
 func (r *Runtime) Describe() error {
 	println("REQUEST CONFIG:")
 	print(r.requestConfig.String())
@@ -216,16 +251,9 @@ func (r *Runtime) Describe() error {
 	print(r.curlConfig.String())
 	println()
 
-	dirs, err := os.ReadDir(r.pwd)
+	children, err := r.getChildren()
 	if err != nil {
-		return FatalErr{err}
-	}
-
-	children := make([]string, 0, len(dirs))
-	for _, dir := range dirs {
-		if dir.IsDir() {
-			children = append(children, dir.Name())
-		}
+		return err
 	}
 
 	if len(children) == 0 {
@@ -236,4 +264,20 @@ func (r *Runtime) Describe() error {
 	println("CONTAINS:")
 	println(strings.Join(children, ", "))
 	return nil
+}
+
+func (r *Runtime) getChildren() ([]string, error) {
+	dirs, err := os.ReadDir(r.pwd)
+	if err != nil {
+		return nil, FatalErr{err}
+	}
+
+	children := make([]string, 0, len(dirs))
+	for _, dir := range dirs {
+		if dir.IsDir() {
+			children = append(children, dir.Name())
+		}
+	}
+
+	return children, nil
 }

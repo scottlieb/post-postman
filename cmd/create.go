@@ -19,8 +19,7 @@ func init() {
 func create(_ *cobra.Command, args []string) {
 	// TODO: read in flag values before write
 	if len(args) == 0 {
-		err := cfg.WriteOut()
-		checkErr(err)
+		println("create requires a collection name")
 		return
 	}
 

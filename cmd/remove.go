@@ -23,8 +23,9 @@ var force bool
 
 func remove(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
+		// TODO
 		err := cmd.Help()
-		cobra.CheckErr(err)
+		checkErr(err)
 		return
 	}
 
@@ -33,4 +34,16 @@ func remove(cmd *cobra.Command, args []string) {
 		println("invalid request name")
 		return
 	}
+
+	parts := strings.Split(partsArg, ".")
+
+	err := cfg.NavigateDir(parts...)
+	checkErr(err)
+
+	if force {
+		err = cfg.ForceRemove()
+	} else {
+		err = cfg.Remove()
+	}
+	checkErr(err)
 }
