@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"post-postman/app/config"
+	"strings"
 )
 
 const (
@@ -204,4 +205,35 @@ func (r *Runtime) Cmd() []string {
 	}
 
 	return append(flags, reqUrl.String())
+}
+
+func (r *Runtime) Describe() error {
+	println("REQUEST CONFIG:")
+	print(r.requestConfig.String())
+	println()
+
+	println("CURL CONFIG:")
+	print(r.curlConfig.String())
+	println()
+
+	dirs, err := os.ReadDir(r.pwd)
+	if err != nil {
+		return FatalErr{err}
+	}
+
+	children := make([]string, 0, len(dirs))
+	for _, dir := range dirs {
+		if dir.IsDir() {
+			children = append(children, dir.Name())
+		}
+	}
+
+	if len(children) == 0 {
+		println("NO CHILDREN")
+		return nil
+	}
+
+	println("CONTAINS:")
+	println(strings.Join(children, ", "))
+	return nil
 }

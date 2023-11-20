@@ -7,7 +7,7 @@ import (
 
 // removeCmd represents the remove command
 var removeCmd = &cobra.Command{
-	Use:     "remove <entity> <name>",
+	Use:     "remove <name>",
 	Aliases: []string{"rm"},
 	Short:   "TODO",
 	Long:    "TODO",

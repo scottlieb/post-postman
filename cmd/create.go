@@ -16,7 +16,7 @@ func init() {
 	createCmd.Run = create
 }
 
-func create(cmd *cobra.Command, args []string) {
+func create(_ *cobra.Command, args []string) {
 	// TODO: read in flag values before write
 	if len(args) == 0 {
 		err := cfg.WriteOut()
@@ -33,12 +33,10 @@ func create(cmd *cobra.Command, args []string) {
 	parts := strings.Split(partsArg, ".")
 
 	// All but the last part
-	for i := 0; i < len(parts)-1; i++ {
-		err := cfg.NavigateDir(parts...)
-		checkErr(err)
-	}
+	err := cfg.NavigateDir(parts[:len(parts)-1]...)
+	checkErr(err)
 
-	err := cfg.CreateDir(parts[len(parts)-1])
+	err = cfg.CreateDir(parts[len(parts)-1])
 	checkErr(err)
 
 	err = cfg.WriteOut()
