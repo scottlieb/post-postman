@@ -28,6 +28,7 @@ func init() {
 	cmd.AddCommand(editCmd)
 	cmd.AddCommand(removeCmd)
 	cmd.AddCommand(describeCmd)
+	cmd.AddCommand(resetCmd)
 
 	home, err := os.UserHomeDir()
 	cobra.CheckErr(err)
