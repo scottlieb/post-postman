@@ -17,7 +17,7 @@ a free, open-source and private alternative to the popular tool 'postman'.`,
 }
 
 func Execute() {
-	cobra.CheckErr(cmd.Execute())
+	checkErr(cmd.Execute())
 }
 
 var cfg app.Runtime

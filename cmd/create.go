@@ -32,10 +32,13 @@ func create(_ *cobra.Command, args []string) {
 	parts := strings.Split(partsArg, ".")
 
 	// All but the last part
-	err := cfg.NavigateDir(parts[:len(parts)-1]...)
+	err := cfg.Navigate(parts[:len(parts)-1]...)
 	checkErr(err)
 
-	err = cfg.CreateDir(parts[len(parts)-1])
+	err = cfg.Create(parts[len(parts)-1])
+	checkErr(err)
+
+	err = cfg.ReadIn()
 	checkErr(err)
 
 	err = cfg.WriteOut()

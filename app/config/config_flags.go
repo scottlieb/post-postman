@@ -7,17 +7,18 @@ import (
 )
 
 type requestFlags struct {
-	URL    string `short:"u" desc:"Request URL"`
-	Scheme string `short:"s" desc:"HTTP scheme to use"`
-	Host   string `short:"y" desc:"Request host"`
-	Path   string `short:"p" desc:"Request path"`
+	URL    string   `short:"u" desc:"Request URL"`
+	Scheme string   `short:"s" desc:"HTTP scheme to use"`
+	Host   string   `short:"y" desc:"Request host"`
+	Path   []string `short:"p" desc:"Request path"`
 }
 
 type curlFlags struct {
-	Data    string   `short:"d" desc:"HTTP POST data"`
-	Request string   `short:"X" desc:"Specify request method to use" default:"GET"`
-	Verbose bool     `short:"v" desc:"Make the operation more talkative"`
-	Header  []string `short:"H" desc:"Pass custom header(s) to server"`
+	Data     string   `short:"d" desc:"HTTP POST data"`
+	Request  string   `short:"X" desc:"Specify request method to use" default:"GET"`
+	Verbose  bool     `short:"v" desc:"Make the operation more talkative"`
+	Header   []string `short:"H" desc:"Pass custom header(s) to server"`
+	Insecure bool     `short:"k" desc:"Allow insecure server connections"`
 }
 
 type Flags struct {
@@ -78,7 +79,7 @@ func initFlags(flagStruct interface{}, flags *pflag.FlagSet) error {
 		case *bool:
 			flags.BoolVarP(vv, name, shorthand, false, description)
 		case *[]string:
-			flags.VarP(header{vv}, name, shorthand, description)
+			flags.StringArrayVarP(vv, name, shorthand, []string{}, description)
 		}
 	}
 
@@ -101,22 +102,4 @@ func fromFlags(cfgStruct interface{}, changed func(string) bool) Map {
 	}
 
 	return res
-}
-
-// header implements the pflag.Value interface
-type header struct {
-	val *[]string
-}
-
-func (h header) String() string {
-	return ""
-}
-
-func (h header) Set(s string) error {
-	*(h.val) = append(*(h.val), s)
-	return nil
-}
-
-func (h header) Type() string {
-	return "key:value"
 }

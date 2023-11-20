@@ -15,46 +15,64 @@ func Read(in []byte) Map {
 		if len(parts) == 1 {
 			res[field] = true
 		}
-		if len(parts) == 2 && parts[0] == "header" {
-			hdrs, ok := res["header"]
-			if ok {
-				res["header"] = append(hdrs.([]string), parts[1])
-				continue
-			}
-			res["header"] = []string{parts[1]}
-			continue
-		}
-		if len(parts) == 2 {
-			res[parts[0]] = parts[1]
-		}
+
 		if len(parts) > 2 {
 			println("Warning: bad config field:", field)
+			continue
 		}
+
+		key, value := parts[0], parts[1]
+
+		if key == "header" || key == "path" {
+			prev, ok := res[key]
+			if ok {
+				res[key] = append(prev.([]string), value)
+			} else {
+				res[key] = []string{value}
+			}
+			continue
+		}
+
+		res[key] = value
 	}
+
 	return res
 }
 
-func (c Map) GetString(key string) (string, bool) {
+func (c Map) GetString(key string) string {
 	res, ok := c[key]
 	if !ok {
-		return "", false
+		return ""
 	}
-	resStr, ok := res.(string)
-	return resStr, ok
+	resStr, _ := res.(string)
+	return resStr
+}
+
+func (c Map) GetStringSlice(key string) []string {
+	res, ok := c[key]
+	if !ok {
+		return nil
+	}
+	resSlice, _ := res.([]string)
+	return resSlice
 }
 
 func (c Map) Merge(other Map) {
-	for k, v := range other {
-		if k == "header" {
-			hdrs, ok := c[k]
-			if ok {
-				c[k] = append(hdrs.([]string), v.([]string)...)
-				continue
-			}
-			c[k] = v.([]string)
+	for key, otherVal := range other {
+		val, ok := c[key]
+		if !ok {
+			c[key] = otherVal
 			continue
 		}
-		c[k] = v
+
+		switch vv := val.(type) {
+		case string: // Just override:
+			c[key] = otherVal
+		case bool: // Toggle:
+			c[key] = vv != otherVal.(bool)
+		case []string: // Append:
+			c[key] = append(vv, otherVal.([]string)...)
+		}
 	}
 }
 

@@ -30,7 +30,7 @@ func reset(_ *cobra.Command, args []string) {
 	}
 
 	parts := strings.Split(partsArg, ".")
-	err := cfg.NavigateDir(parts...)
+	err := cfg.Navigate(parts...)
 	checkErr(err)
 
 	err = cfg.WriteOut()
